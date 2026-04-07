@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+*.pyc
+
+# Environment / secrets
+.env
+service_account.json
+
+# Mac
+.DS_Store
+
