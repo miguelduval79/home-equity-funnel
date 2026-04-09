@@ -29,7 +29,7 @@ const resultMortgage = document.getElementById("resultMortgage");
 const langEnBtn = document.getElementById("lang-en");
 const langEsBtn = document.getElementById("lang-es");
 
-const BACKEND_URL = "http://127.0.0.1:5000/submit-lead";
+const BACKEND_URL = "/submit-lead";
 
 let currentStep = 1;
 const totalSteps = 5;
