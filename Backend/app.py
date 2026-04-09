@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import gspread
 from google.oauth2.service_account import Credentials
@@ -8,7 +8,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="templates", static_folder="static")
 CORS(app)
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
@@ -28,6 +28,11 @@ client = gspread.authorize(CREDS)
 
 SHEET_ID = "1mrYVAUjA95iZ7csOlJncKBbcDOZyvGgYdzin1RIf8aU"
 sheet = client.open_by_key(SHEET_ID).sheet1
+
+
+@app.route("/")
+def home():
+    return render_template("index.html")
 
 
 def send_new_lead_email(lead_data, timestamp):
