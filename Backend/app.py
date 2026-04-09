@@ -6,14 +6,18 @@ from datetime import datetime
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import os  # ✅ added
 
 app = Flask(__name__)
 CORS(app)
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
+# ✅ FIX: Always reference file from same folder as app.py
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 CREDS = Credentials.from_service_account_file(
-    "service_account.json",
+    os.path.join(BASE_DIR, "service_account.json"),
     scopes=SCOPES
 )
 
@@ -79,10 +83,8 @@ def submit_lead():
             timestamp
         ]
 
-        # Save to Google Sheet first
         sheet.append_row(row)
 
-        # Try email notification, but do not fail submission if email fails
         email_sent = True
         email_error = None
 
