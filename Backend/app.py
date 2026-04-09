@@ -6,18 +6,21 @@ from datetime import datetime
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import os  # ✅ added
+import os
 
 app = Flask(__name__)
 CORS(app)
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
-# ✅ FIX: Always reference file from same folder as app.py
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+LOCAL_CREDS_PATH = os.path.join(BASE_DIR, "service_account.json")
+RENDER_CREDS_PATH = "/etc/secrets/service_account.json"
+
+CREDS_PATH = RENDER_CREDS_PATH if os.path.exists(RENDER_CREDS_PATH) else LOCAL_CREDS_PATH
 
 CREDS = Credentials.from_service_account_file(
-    os.path.join(BASE_DIR, "service_account.json"),
+    CREDS_PATH,
     scopes=SCOPES
 )
 
