@@ -10,13 +10,11 @@
   <main class="app">
     <section class="funnel-card">
 
-      <!-- Language Toggle -->
       <div class="language-toggle">
         <button class="lang-btn active" id="lang-en" type="button">EN</button>
         <button class="lang-btn" id="lang-es" type="button">ES</button>
       </div>
 
-      <!-- Header -->
       <div class="funnel-header">
         <p class="eyebrow" id="eyebrowText">Home Equity Check</p>
         <h1 id="mainHeading">See how much equity you may have in your home</h1>
@@ -25,18 +23,15 @@
         </p>
       </div>
 
-      <!-- Progress -->
       <div class="progress-wrapper">
         <div class="progress-bar">
           <div class="progress-fill" id="progressFill"></div>
         </div>
-        <p class="progress-text" id="progressText">Step 1 of 5</p>
+        <p class="progress-text" id="progressText">Step 1 of 6</p>
       </div>
 
-      <!-- Funnel Steps -->
       <div class="steps-container">
 
-        <!-- Step 1 -->
         <div class="step" id="step-1">
           <h2 id="step1Title">Do you currently own a home?</h2>
           <p class="step-text" id="step1Text">This tool is made for current homeowners.</p>
@@ -47,7 +42,6 @@
           </div>
         </div>
 
-        <!-- Exit Step -->
         <div class="step hidden" id="step-exit">
           <h2 id="exitTitle">This tool is for homeowners right now</h2>
           <p class="step-text" id="exitText">
@@ -59,19 +53,13 @@
           </div>
         </div>
 
-        <!-- Step 2 -->
         <div class="step hidden" id="step-2">
           <h2 id="step2Title">What is your property address?</h2>
           <p class="step-text" id="step2Text">We use this to help organize your estimate.</p>
 
           <div class="input-group">
             <label for="address" id="addressLabel">Property Address</label>
-            <input
-              type="text"
-              id="address"
-              name="address"
-              placeholder="123 Main St, Miami, FL"
-            />
+            <input type="text" id="address" name="address" placeholder="123 Main St, Miami, FL" />
           </div>
 
           <div class="button-group">
@@ -80,19 +68,13 @@
           </div>
         </div>
 
-        <!-- Step 3 -->
         <div class="step hidden" id="step-3">
           <h2 id="step3Title">What do you think your home is worth?</h2>
           <p class="step-text" id="step3Text">A rough estimate is okay.</p>
 
           <div class="input-group">
             <label for="propertyValue" id="valueLabel">Estimated Property Value</label>
-            <input
-              type="number"
-              id="propertyValue"
-              name="propertyValue"
-              placeholder="500000"
-            />
+            <input type="number" id="propertyValue" name="propertyValue" placeholder="500000" />
           </div>
 
           <div class="button-group">
@@ -101,19 +83,13 @@
           </div>
         </div>
 
-        <!-- Step 4 -->
         <div class="step hidden" id="step-4">
           <h2 id="step4Title">What is your current mortgage balance?</h2>
           <p class="step-text" id="step4Text">A best guess is fine if you do not know the exact number.</p>
 
           <div class="input-group">
             <label for="mortgageBalance" id="mortgageLabel">Mortgage Balance</label>
-            <input
-              type="number"
-              id="mortgageBalance"
-              name="mortgageBalance"
-              placeholder="300000"
-            />
+            <input type="number" id="mortgageBalance" name="mortgageBalance" placeholder="300000" />
           </div>
 
           <div class="button-group">
@@ -122,29 +98,18 @@
           </div>
         </div>
 
-        <!-- Step 5 -->
         <div class="step hidden" id="step-5">
           <h2 id="step5Title">Where should we send your result?</h2>
           <p class="step-text" id="step5Text">Enter your information below.</p>
 
           <div class="input-group">
             <label for="fullName" id="nameLabel">Full Name</label>
-            <input
-              type="text"
-              id="fullName"
-              name="fullName"
-              placeholder="John Smith"
-            />
+            <input type="text" id="fullName" name="fullName" placeholder="John Smith" />
           </div>
 
           <div class="input-group">
             <label for="email" id="emailLabel">Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              placeholder="you@example.com"
-            />
+            <input type="email" id="email" name="email" placeholder="you@example.com" />
           </div>
 
           <div class="input-group">
@@ -153,7 +118,10 @@
               type="tel"
               id="phone"
               name="phone"
-              placeholder="(305) 555-1234"
+              placeholder="305-555-1234"
+              maxlength="12"
+              inputmode="numeric"
+              autocomplete="tel"
             />
           </div>
 
@@ -163,8 +131,34 @@
           </div>
         </div>
 
-        <!-- Step 6 Result -->
+        <!-- Step 6 Email Verification -->
         <div class="step hidden" id="step-6">
+          <h2 id="verificationTitle">Check your email</h2>
+          <p class="step-text" id="verificationText">
+            We sent a 4-digit code to your email. Enter it below to see your result.
+          </p>
+
+          <div class="input-group">
+            <label for="verificationCode" id="verificationCodeLabel">Verification Code</label>
+            <input
+              type="text"
+              id="verificationCode"
+              name="verificationCode"
+              placeholder="1234"
+              maxlength="4"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+            />
+          </div>
+
+          <div class="button-group">
+            <button class="btn btn-secondary back-btn" data-back="5" type="button">Back</button>
+            <button class="btn btn-primary" id="verifyCodeBtn" type="button">Verify and See My Result</button>
+          </div>
+        </div>
+
+        <!-- Step 7 Result / Thank You Page -->
+        <div class="step hidden" id="step-7">
           <h2 id="resultTitle">Your estimated equity</h2>
           <p class="result-number" id="equityResult">$0</p>
           <p class="step-text" id="resultText">

@@ -7,6 +7,8 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
+import random
+import time
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 CORS(app)
@@ -28,6 +30,10 @@ client = gspread.authorize(CREDS)
 
 SHEET_ID = "1mrYVAUjA95iZ7csOlJncKBbcDOZyvGgYdzin1RIf8aU"
 sheet = client.open_by_key(SHEET_ID).sheet1
+
+verification_codes = {}
+verified_emails = set()
+CODE_EXPIRATION_SECONDS = 600
 
 
 @app.route("/")
@@ -56,6 +62,7 @@ Value: {lead_data.get("estimated_property_value", "")}
 Mortgage: {lead_data.get("current_mortgage_balance", "")}
 Equity: {lead_data.get("estimated_equity", "")}
 Language: {lead_data.get("language", "")}
+Source: {lead_data.get("source", "direct")}
 Time: {timestamp}
 """
 
@@ -71,11 +78,112 @@ Time: {timestamp}
         server.sendmail(sender_email, recipient_email, message.as_string())
 
 
+def send_verification_email(email, code):
+    smtp_server = "smtp.gmail.com"
+    smtp_port = 587
+
+    sender_email = "miguelmedinarealtor@gmail.com"
+    sender_password = "cvjb segs kvbf gkaz"
+
+    subject = "Your Home Equity Verification Code"
+
+    body = f"""
+Your verification code is:
+
+{code}
+
+Enter this code to see your home equity result.
+
+This code expires in 10 minutes.
+"""
+
+    message = MIMEMultipart()
+    message["From"] = sender_email
+    message["To"] = email
+    message["Subject"] = subject
+    message.attach(MIMEText(body, "plain"))
+
+    with smtplib.SMTP(smtp_server, smtp_port) as server:
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.sendmail(sender_email, email, message.as_string())
+
+
+@app.route("/send-verification-code", methods=["POST"])
+def send_verification_code():
+    try:
+        data = request.get_json()
+        email = data.get("email", "").strip().lower()
+
+        if not email:
+            return jsonify({"error": "Email is required."}), 400
+
+        code = str(random.randint(1000, 9999))
+
+        verification_codes[email] = {
+            "code": code,
+            "created_at": time.time()
+        }
+
+        send_verification_email(email, code)
+
+        return jsonify({
+            "status": "success",
+            "message": "Verification code sent."
+        }), 200
+
+    except Exception as e:
+        print("VERIFICATION EMAIL ERROR:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/verify-code", methods=["POST"])
+def verify_code():
+    try:
+        data = request.get_json()
+        email = data.get("email", "").strip().lower()
+        code = data.get("code", "").strip()
+
+        if not email or not code:
+            return jsonify({"error": "Email and code are required."}), 400
+
+        stored = verification_codes.get(email)
+
+        if not stored:
+            return jsonify({"error": "No verification code found."}), 400
+
+        code_age = time.time() - stored["created_at"]
+
+        if code_age > CODE_EXPIRATION_SECONDS:
+            verification_codes.pop(email, None)
+            return jsonify({"error": "Verification code expired."}), 400
+
+        if stored["code"] != code:
+            return jsonify({"error": "Invalid verification code."}), 400
+
+        verified_emails.add(email)
+        verification_codes.pop(email, None)
+
+        return jsonify({
+            "status": "success",
+            "message": "Email verified."
+        }), 200
+
+    except Exception as e:
+        print("CODE VERIFICATION ERROR:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/submit-lead", methods=["POST"])
 def submit_lead():
     try:
         data = request.get_json()
         print("RECEIVED DATA:", data)
+
+        email = data.get("email", "").strip().lower()
+
+        if email not in verified_emails:
+            return jsonify({"error": "Email has not been verified."}), 403
 
         timestamp = datetime.now().strftime("%Y-%m-%d %I:%M %p")
 
@@ -88,7 +196,8 @@ def submit_lead():
             data.get("current_mortgage_balance"),
             data.get("estimated_equity"),
             data.get("language"),
-            timestamp
+            timestamp,
+            data.get("source", "direct")
         ]
 
         sheet.append_row(row)
@@ -102,6 +211,8 @@ def submit_lead():
             email_sent = False
             email_error = str(email_exception)
             print("EMAIL ALERT ERROR:", email_error)
+
+        verified_emails.discard(email)
 
         return jsonify({
             "status": "success",
