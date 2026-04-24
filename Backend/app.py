@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect
 from flask_cors import CORS
 import gspread
 from google.oauth2.service_account import Credentials
@@ -39,6 +39,21 @@ CODE_EXPIRATION_SECONDS = 600
 @app.route("/")
 def home():
     return render_template("index.html")
+
+
+@app.route("/fb")
+def facebook_source():
+    return redirect("/?source=facebook")
+
+
+@app.route("/tt")
+def tiktok_source():
+    return redirect("/?source=tiktok")
+
+
+@app.route("/google")
+def google_source():
+    return redirect("/?source=google")
 
 
 def send_new_lead_email(lead_data, timestamp):
