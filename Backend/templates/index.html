@@ -5,7 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Home Equity Funnel</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18082512549"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'AW-18082512549');
+  </script>
 </head>
+
 <body>
   <main class="app">
     <section class="funnel-card">
@@ -131,7 +141,6 @@
           </div>
         </div>
 
-        <!-- Step 6 Email Verification -->
         <div class="step hidden" id="step-6">
           <h2 id="verificationTitle">Check your email</h2>
           <p class="step-text" id="verificationText">
@@ -157,7 +166,6 @@
           </div>
         </div>
 
-        <!-- Step 7 Result / Thank You Page -->
         <div class="step hidden" id="step-7">
           <h2 id="resultTitle">Your estimated equity</h2>
           <p class="result-number" id="equityResult">$0</p>
