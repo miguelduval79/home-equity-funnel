@@ -645,3 +645,394 @@ langEsBtn.addEventListener("click", () => {
 showStep("step-1");
 updateProgress(1);
 applyLanguage("en");
+/* ==========================================================================
+   Stage 2 — Home Equity Options Comparison
+   Extends CalcMyEquity with a final "Compare Your Home Equity Options"
+   experience. Re-uses the borrower's existing inputs — no re-entry.
+   All scenario assumptions live in ASSUMPTIONS below and are easy to change.
+   ========================================================================== */
+
+/* Centralized scenario assumptions / configuration. */
+const ASSUMPTIONS = {
+  baseRatePct: 7.5,            // default APR assumption (first mortgage / cash-out)
+  defaultTermYears: 30,
+  minRatePct: 3.0,
+  maxRatePct: 15.0,
+  cashOut: {
+    maxLTV: 0.80,              // maximum loan-to-value for a cash-out refinance
+    rateSpread: 0.00           // added on top of the base rate
+  },
+  heloc: {
+    maxCLTV: 0.85,             // maximum combined loan-to-value
+    rateSpread: 0.50,          // HELOC lines typically price above a first mortgage
+    drawYears: 10,
+    repayYears: 20,
+    defaultDrawnPct: 0.50      // share of the credit limit assumed drawn
+  },
+  homeEquityLoan: {
+    maxCLTV: 0.85,
+    rateSpread: 0.75,
+    defaultTermYears: 15
+  },
+  /* Credit-score scenario bands. rateAdj adjusts the assumed rate; ltvAdj
+     mildly adjusts the maximum ratio. These are scenario assumptions, NOT
+     underwriting rules. */
+  creditBands: [
+    { min: 740, label: "Excellent",    rateAdj: -0.25, ltvAdj:  0.02 },
+    { min: 700, label: "Good",         rateAdj:  0.00, ltvAdj:  0.00 },
+    { min: 640, label: "Fair",         rateAdj:  0.50, ltvAdj: -0.03 },
+    { min: 0,   label: "Lower Credit", rateAdj:  1.25, ltvAdj: -0.06 }
+  ]
+};
+
+/* Bilingual strings for the comparison screen. */
+const compareTranslations = {
+  en: {
+    compareTitle: "Compare Your Home Equity Options",
+    compareIntro: "Adjust the assumptions below to compare potential scenarios.",
+    rateLabel: "Interest Rate (APR)",
+    termLabel: "Loan Term",
+    creditLabel: "Credit Score",
+    creditHint: "Scenario estimate only \u2014 not an underwriting decision.",
+    yourEquityLabel: "Your Estimated Home Equity",
+    accessibleLabel: "Potential Accessible Equity",
+    accessibleNote: "Potential accessible equity depends on product and qualification.",
+    cashoutTitle: "Cash-Out Refinance",
+    cashoutDesc: "Replace your existing mortgage with a larger new mortgage and potentially receive part of the difference in cash.",
+    cashoutPotentialLabel: "Potential Cash You Could Receive",
+    cashoutRateLabel: "Interest Rate (APR)",
+    cashoutTermLabel: "Loan Term",
+    cashoutNewMortgageLabel: "Estimated New Mortgage",
+    cashoutPaymentLabel: "Estimated New Mortgage Payment",
+    helocTitle: "Home Equity Line of Credit (HELOC)",
+    helocDesc: "A revolving line of credit secured by your home equity that lets you draw funds when you need them.",
+    helocPotentialLabel: "Potential Credit Limit",
+    helocDrawnLabel: "Amount Drawn",
+    helocRateLabel: "Interest Rate (APR)",
+    helocDrawLabel: "Draw Period",
+    helocRepayLabel: "Repayment Period",
+    helocPaymentLabel: "Estimated Payment",
+    helocFine: "Payment shown assumes interest-only payments during the draw period. A line of credit is not the same as a fixed installment loan.",
+    heloanTitle: "Home Equity Loan",
+    heloanDesc: "A separate loan secured by your property's equity that provides a lump sum while leaving your existing first mortgage in place.",
+    heloanPotentialLabel: "Potential Loan Amount",
+    heloanRateLabel: "Interest Rate (APR)",
+    heloanTermLabel: "Loan Term",
+    heloanPaymentLabel: "Estimated Monthly Payment",
+    heloanTotalLabel: "Estimated Total Repayment",
+    heloanFine: "Payment shown is for the new home equity loan only and does not include your existing first mortgage.",
+    exploreBtn: "Explore This Option",
+    ctaTitle: "Want to explore your options?",
+    ctaText: "We already have your details \u2014 tell us you're interested and we'll help you understand the next step. The numbers above are estimates only.",
+    ctaButton: "Get a Personalized Quote",
+    ctaConfirm: "Thanks! Your information is already on file, so no re-entry is needed. A specialist can follow up about your options.",
+    disclosureText: "These calculations are estimates for informational purposes only and are not a loan offer or approval. Actual rates, terms, payments, available equity and eligibility may vary based on credit profile, property value, existing liens, lender requirements and underwriting.",
+    backToResult: "Back to My Result",
+    compareOptions: "Compare My Options",
+    bandExcellent: "Excellent",
+    bandGood: "Good",
+    bandFair: "Fair",
+    bandLowerCredit: "Lower Credit"
+  },
+  es: {
+    compareTitle: "Compara tus opciones de plusval\u00eda",
+    compareIntro: "Ajusta los supuestos a continuaci\u00f3n para comparar escenarios potenciales.",
+    rateLabel: "Tasa de inter\u00e9s (APR)",
+    termLabel: "Plazo del pr\u00e9stamo",
+    creditLabel: "Puntaje de cr\u00e9dito",
+    creditHint: "Solo estimaci\u00f3n de escenario \u2014 no es una decisi\u00f3n de aprobaci\u00f3n.",
+    yourEquityLabel: "Tu plusval\u00eda estimada",
+    accessibleLabel: "Plusval\u00eda potencialmente accesible",
+    accessibleNote: "La plusval\u00eda potencialmente accesible depende del producto y de la calificaci\u00f3n.",
+    cashoutTitle: "Refinanciamiento con retiro de efectivo",
+    cashoutDesc: "Reemplaza tu hipoteca actual con una hipoteca nueva m\u00e1s grande y podr\u00edas recibir parte de la diferencia en efectivo.",
+    cashoutPotentialLabel: "Efectivo potencial que podr\u00edas recibir",
+    cashoutRateLabel: "Tasa de inter\u00e9s (APR)",
+    cashoutTermLabel: "Plazo del pr\u00e9stamo",
+    cashoutNewMortgageLabel: "Nueva hipoteca estimada",
+    cashoutPaymentLabel: "Pago estimado de la nueva hipoteca",
+    helocTitle: "L\u00ednea de cr\u00e9dito con garant\u00eda hipotecaria (HELOC)",
+    helocDesc: "Una l\u00ednea de cr\u00e9dito revolvente garantizada por la plusval\u00eda de tu casa que te permite disponer de fondos cuando los necesites.",
+    helocPotentialLabel: "L\u00edmite de cr\u00e9dito potencial",
+    helocDrawnLabel: "Monto dispuesto",
+    helocRateLabel: "Tasa de inter\u00e9s (APR)",
+    helocDrawLabel: "Per\u00edodo de disposici\u00f3n",
+    helocRepayLabel: "Per\u00edodo de pago",
+    helocPaymentLabel: "Pago estimado",
+    helocFine: "El pago mostrado asume pagos de solo intereses durante el per\u00edodo de disposici\u00f3n. Una l\u00ednea de cr\u00e9dito no es lo mismo que un pr\u00e9stamo fijo a plazos.",
+    heloanTitle: "Pr\u00e9stamo con garant\u00eda hipotecaria",
+    heloanDesc: "Un pr\u00e9stamo separado garantizado por la plusval\u00eda de tu propiedad que entrega un monto fijo y mantiene tu primera hipoteca actual.",
+    heloanPotentialLabel: "Monto de pr\u00e9stamo potencial",
+    heloanRateLabel: "Tasa de inter\u00e9s (APR)",
+    heloanTermLabel: "Plazo del pr\u00e9stamo",
+    heloanPaymentLabel: "Pago mensual estimado",
+    heloanTotalLabel: "Pago total estimado",
+    heloanFine: "El pago mostrado corresponde solo al nuevo pr\u00e9stamo con garant\u00eda hipotecaria y no incluye tu primera hipoteca actual.",
+    exploreBtn: "Explorar esta opci\u00f3n",
+    ctaTitle: "\u00bfQuieres explorar tus opciones?",
+    ctaText: "Ya tenemos tus datos \u2014 dinos que te interesa y te ayudamos a entender el siguiente paso. Los n\u00fameros de arriba son solo estimados.",
+    ctaButton: "Obtener una cotizaci\u00f3n personalizada",
+    ctaConfirm: "\u00a1Gracias! Tu informaci\u00f3n ya est\u00e1 registrada, no necesitas volver a ingresarla. Un especialista puede dar seguimiento a tus opciones.",
+    disclosureText: "Estos c\u00e1lculos son estimados solo con fines informativos y no constituyen una oferta ni aprobaci\u00f3n de pr\u00e9stamo. Las tasas, plazos, pagos, plusval\u00eda disponible y elegibilidad reales pueden variar seg\u00fan el perfil de cr\u00e9dito, el valor de la propiedad, los grav\u00e1menes existentes, los requisitos del prestamista y la suscripci\u00f3n.",
+    backToResult: "Volver a mi resultado",
+    compareOptions: "Comparar mis opciones",
+    bandExcellent: "Excelente",
+    bandGood: "Bueno",
+    bandFair: "Regular",
+    bandLowerCredit: "Cr\u00e9dito bajo"
+  }
+};
+
+function ct(key) {
+  const table = compareTranslations[currentLanguage] || compareTranslations.en;
+  return table[key] || key;
+}
+
+function setCompareText(id, key) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = ct(key);
+}
+
+function getCreditBandLabel(band) {
+  return ct("band" + band.label.replace(/\s+/g, ""));
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function creditBandFor(score) {
+  const bands = ASSUMPTIONS.creditBands;
+  for (let i = 0; i < bands.length; i++) {
+    if (score >= bands[i].min) return bands[i];
+  }
+  return bands[bands.length - 1];
+}
+
+/* Standard amortized (principal + interest) monthly payment. */
+function amortizedPayment(principal, annualRatePct, years) {
+  if (principal <= 0 || years <= 0) return 0;
+  const monthlyRate = annualRatePct / 100 / 12;
+  const n = years * 12;
+  if (monthlyRate === 0) return principal / n;
+  return (principal * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -n));
+}
+
+function formatRate(value) {
+  return Number(value).toFixed(2) + "%";
+}
+
+const compareOptionsBtn = document.getElementById("compareOptions");
+const backToResultBtn = document.getElementById("backToResult");
+const rateSlider = document.getElementById("rateSlider");
+const termSlider = document.getElementById("termSlider");
+const creditSlider = document.getElementById("creditSlider");
+const helocDrawnSlider = document.getElementById("helocDrawnSlider");
+const funnelCard = document.querySelector(".funnel-card");
+
+let scenario = null;
+
+function applyComparisonLanguage() {
+  setCompareText("compareTitle", "compareTitle");
+  setCompareText("compareIntro", "compareIntro");
+  setCompareText("rateLabel", "rateLabel");
+  setCompareText("termLabel", "termLabel");
+  setCompareText("creditLabel", "creditLabel");
+  setCompareText("creditHint", "creditHint");
+  setCompareText("yourEquityLabel", "yourEquityLabel");
+  setCompareText("accessibleLabel", "accessibleLabel");
+  setCompareText("accessibleNote", "accessibleNote");
+  setCompareText("cashoutTitle", "cashoutTitle");
+  setCompareText("cashoutDesc", "cashoutDesc");
+  setCompareText("cashoutPotentialLabel", "cashoutPotentialLabel");
+  setCompareText("cashoutRateLabel", "cashoutRateLabel");
+  setCompareText("cashoutTermLabel", "cashoutTermLabel");
+  setCompareText("cashoutNewMortgageLabel", "cashoutNewMortgageLabel");
+  setCompareText("cashoutPaymentLabel", "cashoutPaymentLabel");
+  setCompareText("helocTitle", "helocTitle");
+  setCompareText("helocDesc", "helocDesc");
+  setCompareText("helocPotentialLabel", "helocPotentialLabel");
+  setCompareText("helocDrawnLabel", "helocDrawnLabel");
+  setCompareText("helocRateLabel", "helocRateLabel");
+  setCompareText("helocDrawLabel", "helocDrawLabel");
+  setCompareText("helocRepayLabel", "helocRepayLabel");
+  setCompareText("helocPaymentLabel", "helocPaymentLabel");
+  setCompareText("helocFine", "helocFine");
+  setCompareText("heloanTitle", "heloanTitle");
+  setCompareText("heloanDesc", "heloanDesc");
+  setCompareText("heloanPotentialLabel", "heloanPotentialLabel");
+  setCompareText("heloanRateLabel", "heloanRateLabel");
+  setCompareText("heloanTermLabel", "heloanTermLabel");
+  setCompareText("heloanPaymentLabel", "heloanPaymentLabel");
+  setCompareText("heloanTotalLabel", "heloanTotalLabel");
+  setCompareText("heloanFine", "heloanFine");
+  document.querySelectorAll(".product-btn").forEach((btn) => (btn.textContent = ct("exploreBtn")));
+  setCompareText("ctaTitle", "ctaTitle");
+  setCompareText("ctaText", "ctaText");
+  setCompareText("ctaButton", "ctaButton");
+  setCompareText("ctaConfirm", "ctaConfirm");
+  setCompareText("disclosureText", "disclosureText");
+  setCompareText("backToResult", "backToResult");
+  setCompareText("compareOptions", "compareOptions");
+  if (scenario) updateComparison();
+}
+
+function openComparison() {
+  const propertyValue = Number(propertyValueInput.value) || 0;
+  const mortgageBalance = Number(mortgageBalanceInput.value) || 0;
+
+  scenario = {
+    propertyValue: propertyValue,
+    mortgageBalance: mortgageBalance,
+    equity: Math.max(0, propertyValue - mortgageBalance)
+  };
+
+  /* Reset sliders to documented defaults each time the screen opens. */
+  rateSlider.value = String(ASSUMPTIONS.baseRatePct);
+  termSlider.value = String(ASSUMPTIONS.defaultTermYears);
+  creditSlider.value = "720";
+  helocDrawnSlider.value = String(ASSUMPTIONS.heloc.defaultDrawnPct * 100);
+
+  const confirmEl = document.getElementById("ctaConfirm");
+  if (confirmEl) confirmEl.classList.add("hidden");
+
+  if (funnelCard) funnelCard.classList.add("comparing");
+  showStep("step-8");
+  progressFill.style.width = "100%";
+  progressText.textContent = getText("progressComplete");
+  updateComparison();
+}
+
+function updateComparison() {
+  if (!scenario) return;
+
+  const rateInput = Number(rateSlider.value);
+  const term = Number(termSlider.value);
+  const creditScore = Number(creditSlider.value);
+  const band = creditBandFor(creditScore);
+
+  /* Product maximum ratios, mildly adjusted by credit band, then clamped. */
+  const cashOutLTV = clamp(ASSUMPTIONS.cashOut.maxLTV + band.ltvAdj, 0.60, 0.90);
+  const helocCLTV = clamp(ASSUMPTIONS.heloc.maxCLTV + band.ltvAdj, 0.60, 0.90);
+  const heloanCLTV = clamp(ASSUMPTIONS.homeEquityLoan.maxCLTV + band.ltvAdj, 0.60, 0.90);
+
+  const value = scenario.propertyValue;
+  const balance = scenario.mortgageBalance;
+
+  /* --- Cash-Out Refinance --- */
+  const cashOutRate = clamp(
+    rateInput + band.rateAdj + ASSUMPTIONS.cashOut.rateSpread,
+    ASSUMPTIONS.minRatePct, ASSUMPTIONS.maxRatePct
+  );
+  const maxNewMortgage = Math.max(0, value * cashOutLTV);
+  const cashOutAmount = Math.max(0, maxNewMortgage - balance);
+  /* Payment is on the ENTIRE replacement mortgage, not just the cash received. */
+  const cashOutPayment = amortizedPayment(maxNewMortgage, cashOutRate, term);
+
+  /* --- HELOC --- */
+  const helocRate = clamp(
+    rateInput + band.rateAdj + ASSUMPTIONS.heloc.rateSpread,
+    ASSUMPTIONS.minRatePct, ASSUMPTIONS.maxRatePct
+  );
+  const helocLimit = Math.max(0, value * helocCLTV - balance);
+  const drawnPct = Number(helocDrawnSlider.value) / 100;
+  const amountDrawn = helocLimit * drawnPct;
+  /* Draw-period payment = interest-only on the amount actually drawn. */
+  const helocPayment = amountDrawn * (helocRate / 100 / 12);
+
+  /* --- Home Equity Loan (second lien; first mortgage stays put) --- */
+  const heloanRate = clamp(
+    rateInput + band.rateAdj + ASSUMPTIONS.homeEquityLoan.rateSpread,
+    ASSUMPTIONS.minRatePct, ASSUMPTIONS.maxRatePct
+  );
+  const heloanAmount = Math.max(0, value * heloanCLTV - balance);
+  const heloanTerm = ASSUMPTIONS.homeEquityLoan.defaultTermYears;
+  const heloanPayment = amortizedPayment(heloanAmount, heloanRate, heloanTerm);
+  const heloanTotal = heloanPayment * heloanTerm * 12;
+
+  /* Potential accessible equity = best case across the three products. */
+  const accessible = Math.max(cashOutAmount, helocLimit, heloanAmount);
+
+  /* --- Scenario control readouts --- */
+  document.getElementById("rateValue").textContent = formatRate(rateInput);
+  document.getElementById("termValue").textContent = term + " yr";
+  document.getElementById("creditValue").textContent = creditScore + " (" + getCreditBandLabel(band) + ")";
+
+  /* --- Equity block --- */
+  document.getElementById("compareEquityValue").textContent = formatCurrency(scenario.equity);
+  document.getElementById("accessibleEquityValue").textContent = formatCurrency(accessible);
+
+  /* --- Cash-Out card --- */
+  document.getElementById("cashoutCash").textContent = formatCurrency(cashOutAmount);
+  document.getElementById("cashoutRate").textContent = formatRate(cashOutRate);
+  document.getElementById("cashoutTerm").textContent = term + " yr";
+  document.getElementById("cashoutNewMortgage").textContent = formatCurrency(maxNewMortgage);
+  document.getElementById("cashoutPayment").textContent = formatCurrency(cashOutPayment) + "/mo";
+
+  /* --- HELOC card --- */
+  document.getElementById("helocLimit").textContent = formatCurrency(helocLimit);
+  document.getElementById("helocRate").textContent = formatRate(helocRate);
+  document.getElementById("helocDraw").textContent = ASSUMPTIONS.heloc.drawYears + " yr";
+  document.getElementById("helocRepay").textContent = ASSUMPTIONS.heloc.repayYears + " yr";
+  document.getElementById("helocDrawnValue").textContent = Math.round(drawnPct * 100) + "%";
+  document.getElementById("helocPayment").textContent = formatCurrency(helocPayment) + "/mo";
+
+  /* --- Home Equity Loan card --- */
+  document.getElementById("heloanAmount").textContent = formatCurrency(heloanAmount);
+  document.getElementById("heloanRate").textContent = formatRate(heloanRate);
+  document.getElementById("heloanTerm").textContent = heloanTerm + " yr";
+  document.getElementById("heloanPayment").textContent = formatCurrency(heloanPayment) + "/mo";
+  document.getElementById("heloanTotal").textContent = formatCurrency(heloanTotal);
+}
+
+/* --- Wiring --- */
+if (compareOptionsBtn) {
+  compareOptionsBtn.addEventListener("click", openComparison);
+}
+
+if (backToResultBtn) {
+  backToResultBtn.addEventListener("click", () => {
+    if (funnelCard) funnelCard.classList.remove("comparing");
+    showStep("step-7");
+    progressFill.style.width = "100%";
+    progressText.textContent = getText("progressComplete");
+  });
+}
+
+[rateSlider, termSlider, creditSlider, helocDrawnSlider].forEach((slider) => {
+  if (slider) slider.addEventListener("input", updateComparison);
+});
+
+document.querySelectorAll(".product-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const cta = document.querySelector(".comparison-cta");
+    if (cta) cta.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+});
+
+const ctaButtonEl = document.getElementById("ctaButton");
+if (ctaButtonEl) {
+  ctaButtonEl.addEventListener("click", () => {
+    const confirmEl = document.getElementById("ctaConfirm");
+    if (confirmEl) confirmEl.classList.remove("hidden");
+  });
+}
+
+/* Keep the comparison screen in sync with the language toggle. */
+if (typeof langEnBtn !== "undefined" && langEnBtn) {
+  langEnBtn.addEventListener("click", applyComparisonLanguage);
+}
+if (typeof langEsBtn !== "undefined" && langEsBtn) {
+  langEsBtn.addEventListener("click", applyComparisonLanguage);
+}
+
+/* If the user restarts from the result screen, leave comparison mode. */
+const restartBtnForCompare = document.getElementById("restartFunnel");
+if (restartBtnForCompare) {
+  restartBtnForCompare.addEventListener("click", () => {
+    if (funnelCard) funnelCard.classList.remove("comparing");
+  });
+}
+
+/* Initial pass so the first screen load has correct labels. */
+applyComparisonLanguage();

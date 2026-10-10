@@ -180,7 +180,133 @@
           </div>
 
           <div class="button-group">
-            <button class="btn btn-primary" id="restartFunnel" type="button">Start Over</button>
+            <button class="btn btn-primary" id="compareOptions" type="button">Compare My Options</button>
+          </div>
+          <div class="button-group">
+            <button class="btn btn-secondary" id="restartFunnel" type="button">Start Over</button>
+          </div>
+        </div>
+
+        <!-- ================= Stage 2: Home Equity Options Comparison ================= -->
+        <div class="step hidden" id="step-8">
+          <h2 id="compareTitle">Compare Your Home Equity Options</h2>
+          <p class="step-text" id="compareIntro">Adjust the assumptions below to compare potential scenarios.</p>
+
+          <!-- Scenario controls -->
+          <div class="scenario-controls">
+            <div class="control">
+              <div class="control-head">
+                <label for="rateSlider" id="rateLabel">Interest Rate (APR)</label>
+                <span class="control-value" id="rateValue">7.50%</span>
+              </div>
+              <input type="range" id="rateSlider" min="4" max="11" step="0.125" value="7.5" />
+            </div>
+
+            <div class="control">
+              <div class="control-head">
+                <label for="termSlider" id="termLabel">Loan Term</label>
+                <span class="control-value" id="termValue">30 yr</span>
+              </div>
+              <input type="range" id="termSlider" min="10" max="30" step="5" value="30" />
+            </div>
+
+            <div class="control">
+              <div class="control-head">
+                <label for="creditSlider" id="creditLabel">Credit Score</label>
+                <span class="control-value" id="creditValue">720 (Good)</span>
+              </div>
+              <input type="range" id="creditSlider" min="580" max="850" step="5" value="720" />
+              <p class="control-hint" id="creditHint">Scenario estimate only — not an underwriting decision.</p>
+            </div>
+          </div>
+
+          <!-- Equity block -->
+          <div class="equity-block">
+            <p class="equity-block-label" id="yourEquityLabel">Your Estimated Home Equity</p>
+            <p class="equity-block-value" id="compareEquityValue">$0</p>
+            <p class="equity-block-sub"><span id="accessibleLabel">Potential Accessible Equity</span>: <strong id="accessibleEquityValue">$0</strong></p>
+            <p class="equity-block-fine" id="accessibleNote">Potential accessible equity depends on product and qualification.</p>
+          </div>
+
+          <!-- Product cards -->
+          <div class="product-cards">
+
+            <!-- Cash-Out Refinance -->
+            <article class="product-card" id="card-cashout">
+              <h3 id="cashoutTitle">Cash-Out Refinance</h3>
+              <p class="product-desc" id="cashoutDesc">Replace your existing mortgage with a larger new mortgage and potentially receive part of the difference in cash.</p>
+              <div class="product-highlight">
+                <span class="product-highlight-label" id="cashoutPotentialLabel">Potential Cash You Could Receive</span>
+                <span class="product-highlight-value" id="cashoutCash">$0</span>
+              </div>
+              <ul class="product-metrics">
+                <li><span id="cashoutRateLabel">Interest Rate (APR)</span><strong id="cashoutRate">—</strong></li>
+                <li><span id="cashoutTermLabel">Loan Term</span><strong id="cashoutTerm">—</strong></li>
+                <li><span id="cashoutNewMortgageLabel">Estimated New Mortgage</span><strong id="cashoutNewMortgage">—</strong></li>
+                <li><span id="cashoutPaymentLabel">Estimated New Mortgage Payment</span><strong id="cashoutPayment">—</strong></li>
+              </ul>
+              <button class="btn btn-primary product-btn" id="exploreCashout" type="button">Explore This Option</button>
+            </article>
+
+            <!-- HELOC -->
+            <article class="product-card" id="card-heloc">
+              <h3 id="helocTitle">Home Equity Line of Credit (HELOC)</h3>
+              <p class="product-desc" id="helocDesc">A revolving line of credit secured by your home equity that lets you draw funds when you need them.</p>
+              <div class="product-highlight">
+                <span class="product-highlight-label" id="helocPotentialLabel">Potential Credit Limit</span>
+                <span class="product-highlight-value" id="helocLimit">$0</span>
+              </div>
+              <div class="control control-inline">
+                <div class="control-head">
+                  <label for="helocDrawnSlider" id="helocDrawnLabel">Amount Drawn</label>
+                  <span class="control-value" id="helocDrawnValue">50%</span>
+                </div>
+                <input type="range" id="helocDrawnSlider" min="0" max="100" step="5" value="50" />
+              </div>
+              <ul class="product-metrics">
+                <li><span id="helocRateLabel">Interest Rate (APR)</span><strong id="helocRate">—</strong></li>
+                <li><span id="helocDrawLabel">Draw Period</span><strong id="helocDraw">—</strong></li>
+                <li><span id="helocRepayLabel">Repayment Period</span><strong id="helocRepay">—</strong></li>
+                <li><span id="helocPaymentLabel">Estimated Payment</span><strong id="helocPayment">—</strong></li>
+              </ul>
+              <p class="product-fine" id="helocFine">Payment shown assumes interest-only payments during the draw period. A line of credit is not the same as a fixed installment loan.</p>
+              <button class="btn btn-primary product-btn" id="exploreHeloc" type="button">Explore This Option</button>
+            </article>
+
+            <!-- Home Equity Loan -->
+            <article class="product-card" id="card-heloan">
+              <h3 id="heloanTitle">Home Equity Loan</h3>
+              <p class="product-desc" id="heloanDesc">A separate loan secured by your property's equity that provides a lump sum while leaving your existing first mortgage in place.</p>
+              <div class="product-highlight">
+                <span class="product-highlight-label" id="heloanPotentialLabel">Potential Loan Amount</span>
+                <span class="product-highlight-value" id="heloanAmount">$0</span>
+              </div>
+              <ul class="product-metrics">
+                <li><span id="heloanRateLabel">Interest Rate (APR)</span><strong id="heloanRate">—</strong></li>
+                <li><span id="heloanTermLabel">Loan Term</span><strong id="heloanTerm">—</strong></li>
+                <li><span id="heloanPaymentLabel">Estimated Monthly Payment</span><strong id="heloanPayment">—</strong></li>
+                <li><span id="heloanTotalLabel">Estimated Total Repayment</span><strong id="heloanTotal">—</strong></li>
+              </ul>
+              <p class="product-fine" id="heloanFine">Payment shown is for the new home equity loan only and does not include your existing first mortgage.</p>
+              <button class="btn btn-primary product-btn" id="exploreHeloan" type="button">Explore This Option</button>
+            </article>
+
+          </div>
+
+          <!-- Call to action -->
+          <div class="comparison-cta">
+            <h3 id="ctaTitle">Want to explore your options?</h3>
+            <p class="step-text" id="ctaText">We already have your details — tell us you're interested and we'll help you understand the next step. The numbers above are estimates only.</p>
+            <div class="button-group">
+              <button class="btn btn-primary" id="ctaButton" type="button">Get a Personalized Quote</button>
+            </div>
+            <p class="cta-confirm hidden" id="ctaConfirm">Thanks! Your information is already on file, so no re-entry is needed. A specialist can follow up about your options.</p>
+          </div>
+
+          <p class="disclosure" id="disclosureText">These calculations are estimates for informational purposes only and are not a loan offer or approval. Actual rates, terms, payments, available equity and eligibility may vary based on credit profile, property value, existing liens, lender requirements and underwriting.</p>
+
+          <div class="button-group">
+            <button class="btn btn-secondary" id="backToResult" type="button">Back to My Result</button>
           </div>
         </div>
 

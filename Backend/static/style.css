@@ -468,3 +468,338 @@ body {
     transition: none !important;
   }
 }
+
+/* ==========================================================================
+   Stage 2 — Home Equity Options Comparison
+   Extends the Stage 1 visual system. Presentation only.
+   ========================================================================== */
+
+/* Widen the card when the comparison view is active so the three product
+   cards can sit side by side on desktop. Toggled from app.js. */
+.funnel-card.comparing {
+  max-width: 1080px;
+}
+
+#step-8 {
+  animation: stepIn 0.3s ease both;
+}
+
+/* --- Scenario controls (sliders) --- */
+.scenario-controls {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 20px;
+  margin-bottom: 24px;
+  background: var(--tint);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.control {
+  flex: 1 1 220px;
+  min-width: 180px;
+}
+
+.control-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.control-head label {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink-700);
+}
+
+.control-value {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--blue-600);
+  white-space: nowrap;
+}
+
+.control-hint {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-500);
+}
+
+.control-inline {
+  flex: none;
+  margin: 4px 0 16px;
+  padding: 12px 14px;
+  background: var(--tint);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+/* --- Range slider --- */
+input[type="range"] {
+  width: 100%;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--line-strong);
+  border-radius: 999px;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid var(--blue-500);
+  box-shadow: 0 4px 10px -3px rgba(29, 78, 216, 0.6);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.08);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid var(--blue-500);
+  box-shadow: 0 4px 10px -3px rgba(29, 78, 216, 0.6);
+}
+
+input[type="range"]:focus-visible {
+  box-shadow: var(--ring);
+}
+
+/* --- Equity summary block --- */
+.equity-block {
+  text-align: center;
+  padding: 22px 20px;
+  margin-bottom: 24px;
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(520px 200px at 50% 0%, rgba(14, 165, 233, 0.12), transparent 60%),
+    linear-gradient(180deg, #f5f9ff 0%, #eef4fd 100%);
+  border: 1px solid #dbe6f6;
+}
+
+.equity-block-label {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--blue-600);
+  margin-bottom: 6px;
+}
+
+.equity-block-value {
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--navy-900);
+}
+
+.equity-block-sub {
+  margin-top: 8px;
+  font-size: 15px;
+  color: var(--ink-600);
+}
+
+.equity-block-sub strong {
+  color: var(--navy-900);
+  font-weight: 800;
+}
+
+.equity-block-fine {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--ink-500);
+}
+
+/* --- Product cards --- */
+.product-cards {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.product-card {
+  flex: 1 1 280px;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 20px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+}
+
+.product-card h3 {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--navy-900);
+  margin-bottom: 8px;
+}
+
+.product-desc {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-600);
+  margin-bottom: 16px;
+}
+
+.product-highlight {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, #f5f9ff 0%, #eef4fd 100%);
+  border: 1px solid #dbe6f6;
+}
+
+.product-highlight-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-500);
+}
+
+.product-highlight-value {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--navy-900);
+}
+
+.product-metrics {
+  list-style: none;
+  margin-bottom: 16px;
+}
+
+.product-metrics li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 9px 0;
+  font-size: 13.5px;
+  color: var(--ink-600);
+  border-bottom: 1px solid var(--line);
+}
+
+.product-metrics li:last-child {
+  border-bottom: none;
+}
+
+.product-metrics li span {
+  color: var(--ink-500);
+}
+
+.product-metrics li strong {
+  color: var(--navy-900);
+  font-weight: 800;
+  text-align: right;
+}
+
+.product-fine {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--ink-500);
+  margin-bottom: 16px;
+}
+
+.product-btn {
+  margin-top: auto;
+  width: 100%;
+  padding: 13px 18px;
+  font-size: 14.5px;
+}
+
+/* --- CTA --- */
+.comparison-cta {
+  text-align: center;
+  padding: 26px 22px;
+  margin-bottom: 22px;
+  border-radius: var(--radius-lg);
+  background: var(--navy-900);
+  color: #ffffff;
+}
+
+.comparison-cta h3 {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+  color: #ffffff;
+}
+
+.comparison-cta .step-text {
+  color: rgba(255, 255, 255, 0.78);
+  margin-bottom: 18px;
+}
+
+.comparison-cta .button-group {
+  justify-content: center;
+  margin-top: 0;
+}
+
+.cta-confirm {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #eaf2ff;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+/* --- Disclosure --- */
+.disclosure {
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--ink-500);
+  padding: 14px 16px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+}
+
+/* --- Stage 2 responsive --- */
+@media (max-width: 900px) {
+  .funnel-card.comparing {
+    max-width: 620px;
+  }
+}
+
+@media (max-width: 640px) {
+  .scenario-controls {
+    padding: 16px;
+  }
+
+  .product-cards {
+    gap: 14px;
+  }
+
+  .product-card {
+    flex: 1 1 100%;
+  }
+
+  .equity-block-value {
+    font-size: 34px;
+  }
+}
