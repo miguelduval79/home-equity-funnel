@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Home Equity Funnel</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=2" />
 
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18082512549"></script>
@@ -224,8 +224,9 @@
           <div class="equity-block">
             <p class="equity-block-label" id="yourEquityLabel">Your Estimated Home Equity</p>
             <p class="equity-block-value" id="compareEquityValue">$0</p>
+            <p class="equity-block-fine" id="equityExplanation">Based on your estimated home value minus your mortgage balance.</p>
             <p class="equity-block-sub"><span id="accessibleLabel">Potential Accessible Equity</span>: <strong id="accessibleEquityValue">$0</strong></p>
-            <p class="equity-block-fine" id="accessibleNote">Potential accessible equity depends on product and qualification.</p>
+            <p class="equity-block-fine" id="accessibleNote">The most you might access across these options \u2014 depends on the product and on qualification. This is not the same as your total equity.</p>
           </div>
 
           <!-- Product cards -->
@@ -314,6 +315,6 @@
     </section>
   </main>
 
-  <script src="{{ url_for('static', filename='app.js') }}"></script>
+  <script src="{{ url_for('static', filename='app.js') }}?v=2"></script>
 </body>
 </html>

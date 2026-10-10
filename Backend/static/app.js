@@ -695,6 +695,7 @@ const compareTranslations = {
     creditLabel: "Credit Score",
     creditHint: "Scenario estimate only \u2014 not an underwriting decision.",
     yourEquityLabel: "Your Estimated Home Equity",
+    equityExplanation: "Based on your estimated home value minus your mortgage balance.",
     accessibleLabel: "Potential Accessible Equity",
     accessibleNote: "Potential accessible equity depends on product and qualification.",
     cashoutTitle: "Cash-Out Refinance",
@@ -742,6 +743,7 @@ const compareTranslations = {
     creditLabel: "Puntaje de cr\u00e9dito",
     creditHint: "Solo estimaci\u00f3n de escenario \u2014 no es una decisi\u00f3n de aprobaci\u00f3n.",
     yourEquityLabel: "Tu plusval\u00eda estimada",
+    equityExplanation: "Seg\u00fan el valor estimado de tu casa menos el saldo de tu hipoteca.",
     accessibleLabel: "Plusval\u00eda potencialmente accesible",
     accessibleNote: "La plusval\u00eda potencialmente accesible depende del producto y de la calificaci\u00f3n.",
     cashoutTitle: "Refinanciamiento con retiro de efectivo",
@@ -801,6 +803,14 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
+/* Parse a formatted dollar string like "$480,000" back into a number. */
+function parseMoney(text) {
+  if (!text) return 0;
+  const cleaned = String(text).replace(/[^0-9.-]/g, "");
+  const n = Number(cleaned);
+  return isNaN(n) ? 0 : n;
+}
+
 function creditBandFor(score) {
   const bands = ASSUMPTIONS.creditBands;
   for (let i = 0; i < bands.length; i++) {
@@ -840,6 +850,7 @@ function applyComparisonLanguage() {
   setCompareText("creditLabel", "creditLabel");
   setCompareText("creditHint", "creditHint");
   setCompareText("yourEquityLabel", "yourEquityLabel");
+  setCompareText("equityExplanation", "equityExplanation");
   setCompareText("accessibleLabel", "accessibleLabel");
   setCompareText("accessibleNote", "accessibleNote");
   setCompareText("cashoutTitle", "cashoutTitle");
@@ -878,13 +889,21 @@ function applyComparisonLanguage() {
 }
 
 function openComparison() {
-  const propertyValue = Number(propertyValueInput.value) || 0;
-  const mortgageBalance = Number(mortgageBalanceInput.value) || 0;
+  /* Carry over the figures the borrower already saw on the result screen.
+     This guarantees the comparison uses the SAME equity we already calculated
+     instead of ever showing $0. Raw inputs are used only as a fallback. */
+  let propertyValue = parseMoney(resultValue.textContent);
+  let mortgageBalance = parseMoney(resultMortgage.textContent);
+  let equity = parseMoney(equityResult.textContent);
+
+  if (!propertyValue) propertyValue = Number(propertyValueInput.value) || 0;
+  if (!mortgageBalance) mortgageBalance = Number(mortgageBalanceInput.value) || 0;
+  if (!equity) equity = Math.max(0, propertyValue - mortgageBalance);
 
   scenario = {
     propertyValue: propertyValue,
     mortgageBalance: mortgageBalance,
-    equity: Math.max(0, propertyValue - mortgageBalance)
+    equity: equity
   };
 
   /* Reset sliders to documented defaults each time the screen opens. */
