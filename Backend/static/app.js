@@ -659,29 +659,29 @@ const ASSUMPTIONS = {
   minRatePct: 3.0,
   maxRatePct: 15.0,
   cashOut: {
-    maxLTV: 0.80,              // maximum loan-to-value for a cash-out refinance
+    maxLTV: 0.85,              // maximum loan-to-value for a cash-out refinance
     rateSpread: 0.00           // added on top of the base rate
   },
   heloc: {
-    maxCLTV: 0.85,             // maximum combined loan-to-value
+    maxCLTV: 0.90,             // maximum combined loan-to-value
     rateSpread: 0.50,          // HELOC lines typically price above a first mortgage
     drawYears: 10,
     repayYears: 20,
     defaultDrawnPct: 0.50      // share of the credit limit assumed drawn
   },
   homeEquityLoan: {
-    maxCLTV: 0.85,
+    maxCLTV: 0.90,
     rateSpread: 0.75,
     defaultTermYears: 15
   },
-  /* Credit-score scenario bands. rateAdj adjusts the assumed rate; ltvAdj
-     mildly adjusts the maximum ratio. These are scenario assumptions, NOT
-     underwriting rules. */
+  /* Credit-score scenario bands. The credit score adjusts ONLY the assumed
+     interest rate (rateAdj) \u2014 it never changes the maximum loan-to-value or
+     zeroes out the amounts. These are scenario assumptions, NOT underwriting. */
   creditBands: [
-    { min: 740, label: "Excellent",    rateAdj: -0.25, ltvAdj:  0.02 },
-    { min: 700, label: "Good",         rateAdj:  0.00, ltvAdj:  0.00 },
-    { min: 640, label: "Fair",         rateAdj:  0.50, ltvAdj: -0.03 },
-    { min: 0,   label: "Lower Credit", rateAdj:  1.25, ltvAdj: -0.06 }
+    { min: 740, label: "Excellent",    rateAdj: -0.25 },
+    { min: 700, label: "Good",         rateAdj:  0.00 },
+    { min: 640, label: "Fair",         rateAdj:  0.50 },
+    { min: 0,   label: "Lower Credit", rateAdj:  1.25 }
   ]
 };
 
@@ -735,7 +735,7 @@ const compareTranslations = {
     bandFair: "Fair",
     bandLowerCredit: "Lower Credit",
     compareStatus: "Some options show $0 because the existing mortgage is at or above the assumed maximum loan-to-value. Equity above that limit is real, but it may not be accessible through these products at these assumptions.",
-    assumptionsNote: "Assumptions used: up to 80% loan-to-value for a cash-out refinance and 85% combined loan-to-value for a HELOC or home equity loan. Actual lender limits may differ."
+    assumptionsNote: "Assumptions used: up to 85% loan-to-value for a cash-out refinance and 90% combined loan-to-value for a HELOC or home equity loan. Actual lender limits may differ."
   },
   es: {
     compareTitle: "Compara tus opciones de plusval\u00eda",
@@ -785,7 +785,7 @@ const compareTranslations = {
     bandFair: "Regular",
     bandLowerCredit: "Cr\u00e9dito bajo",
     compareStatus: "Algunas opciones muestran $0 porque la hipoteca actual est\u00e1 en o por encima del m\u00e1ximo de relaci\u00f3n pr\u00e9stamo-valor asumido. Esa plusval\u00eda existe, pero puede no ser accesible con estos productos bajo estos supuestos.",
-    assumptionsNote: "Supuestos: hasta 80% de relaci\u00f3n pr\u00e9stamo-valor para refinanciamiento con retiro de efectivo y 85% de relaci\u00f3n combinada para HELOC o pr\u00e9stamo con garant\u00eda hipotecaria. Los l\u00edmites reales del prestamista pueden variar."
+    assumptionsNote: "Supuestos: hasta 85% de relaci\u00f3n pr\u00e9stamo-valor para refinanciamiento con retiro de efectivo y 90% de relaci\u00f3n combinada para HELOC o pr\u00e9stamo con garant\u00eda hipotecaria. Los l\u00edmites reales del prestamista pueden variar."
   }
 };
 
@@ -935,10 +935,11 @@ function updateComparison() {
   const creditScore = Number(creditSlider.value);
   const band = creditBandFor(creditScore);
 
-  /* Product maximum ratios, mildly adjusted by credit band, then clamped. */
-  const cashOutLTV = clamp(ASSUMPTIONS.cashOut.maxLTV + band.ltvAdj, 0.60, 0.90);
-  const helocCLTV = clamp(ASSUMPTIONS.heloc.maxCLTV + band.ltvAdj, 0.60, 0.90);
-  const heloanCLTV = clamp(ASSUMPTIONS.homeEquityLoan.maxCLTV + band.ltvAdj, 0.60, 0.90);
+  /* Product maximum ratios. Credit score intentionally does NOT change these,
+     so lowering the credit score can never zero out the amounts. */
+  const cashOutLTV = ASSUMPTIONS.cashOut.maxLTV;
+  const helocCLTV = ASSUMPTIONS.heloc.maxCLTV;
+  const heloanCLTV = ASSUMPTIONS.homeEquityLoan.maxCLTV;
 
   const value = scenario.propertyValue;
   const balance = scenario.mortgageBalance;
