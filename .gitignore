@@ -9,3 +9,8 @@ service_account.json
 # Mac
 .DS_Store
 
+
+# Gmail OAuth token
+gmail_token.json
+
+.venv/

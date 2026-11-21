@@ -1,35 +1,65 @@
 from flask import Flask, request, jsonify, render_template, redirect
 from flask_cors import CORS
-import gspread
-from google.oauth2.service_account import Credentials
 from datetime import datetime
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import base64
 import os
 import random
 import time
 
+from email.message import EmailMessage
+
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+
 app = Flask(__name__, template_folder="templates", static_folder="static")
 CORS(app)
 
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-
+# ---------------------------------------------------------------------------
+# Mail configuration (Gmail API, OAuth refresh token — no SMTP, no password)
+# ---------------------------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-LOCAL_CREDS_PATH = os.path.join(BASE_DIR, "service_account.json")
-RENDER_CREDS_PATH = "/etc/secrets/service_account.json"
+LOCAL_TOKEN_PATH = os.path.join(BASE_DIR, "gmail_token.json")
+RENDER_TOKEN_PATH = "/etc/secrets/gmail_token.json"
 
-CREDS_PATH = RENDER_CREDS_PATH if os.path.exists(RENDER_CREDS_PATH) else LOCAL_CREDS_PATH
-
-CREDS = Credentials.from_service_account_file(
-    CREDS_PATH,
-    scopes=SCOPES
+GMAIL_TOKEN_FILE = os.environ.get(
+    "GMAIL_TOKEN_FILE",
+    RENDER_TOKEN_PATH if os.path.exists(RENDER_TOKEN_PATH) else LOCAL_TOKEN_PATH,
 )
+GMAIL_SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
+SENDER_EMAIL = os.environ.get("GMAIL_SENDER", "miguel@myfloridaequity.com")
+LEAD_NOTIFY_TO = os.environ.get("LEAD_NOTIFY_TO", "miguel@myfloridaequity.com")
 
-client = gspread.authorize(CREDS)
+_google = {}
 
-SHEET_ID = "1mrYVAUjA95iZ7csOlJncKBbcDOZyvGgYdzin1RIf8aU"
-sheet = client.open_by_key(SHEET_ID).sheet1
+
+def gmail_service():
+    """Build (and cache) the Gmail API client from the stored refresh token."""
+    service = _google.get("service")
+    if service is not None:
+        return service
+    if not os.path.exists(GMAIL_TOKEN_FILE):
+        raise RuntimeError(f"Gmail token file not found: {GMAIL_TOKEN_FILE}")
+    creds = Credentials.from_authorized_user_file(GMAIL_TOKEN_FILE, GMAIL_SCOPES)
+    if creds.expired and creds.refresh_token:
+        creds.refresh(Request())
+    service = build("gmail", "v1", credentials=creds, cache_discovery=False)
+    _google["service"] = service
+    return service
+
+
+def send_email(to_address, subject, body):
+    message = EmailMessage()
+    message["To"] = to_address
+    message["From"] = SENDER_EMAIL
+    message["Subject"] = subject
+    message.set_content(body)
+
+    raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
+    gmail_service().users().messages().send(
+        userId="me", body={"raw": raw}
+    ).execute()
+
 
 verification_codes = {}
 verified_emails = set()
@@ -56,14 +86,12 @@ def google_source():
     return redirect("/?source=google")
 
 
+@app.route("/healthz")
+def healthz():
+    return jsonify({"ok": True}), 200
+
+
 def send_new_lead_email(lead_data, timestamp):
-    smtp_server = "smtp.gmail.com"
-    smtp_port = 587
-
-    sender_email = "miguel@myfloridaequity.com"
-    sender_password = "REDACTED"
-    recipient_email = "medina21@gmail.com"
-
     subject = "New Home Equity Lead"
 
     body = f"""
@@ -81,25 +109,10 @@ Source: {lead_data.get("source", "direct")}
 Time: {timestamp}
 """
 
-    message = MIMEMultipart()
-    message["From"] = sender_email
-    message["To"] = recipient_email
-    message["Subject"] = subject
-    message.attach(MIMEText(body, "plain"))
-
-    with smtplib.SMTP(smtp_server, smtp_port) as server:
-        server.starttls()
-        server.login(sender_email, sender_password)
-        server.sendmail(sender_email, recipient_email, message.as_string())
+    send_email(LEAD_NOTIFY_TO, subject, body)
 
 
 def send_verification_email(email, code):
-    smtp_server = "smtp.gmail.com"
-    smtp_port = 587
-
-    sender_email = "miguel@myfloridaequity.com"
-    sender_password = "REDACTED"
-
     subject = "Your Home Equity Verification Code"
 
     body = f"""
@@ -112,16 +125,7 @@ Enter this code to see your home equity result.
 This code expires in 10 minutes.
 """
 
-    message = MIMEMultipart()
-    message["From"] = sender_email
-    message["To"] = email
-    message["Subject"] = subject
-    message.attach(MIMEText(body, "plain"))
-
-    with smtplib.SMTP(smtp_server, smtp_port) as server:
-        server.starttls()
-        server.login(sender_email, sender_password)
-        server.sendmail(sender_email, email, message.as_string())
+    send_email(email, subject, body)
 
 
 @app.route("/send-verification-code", methods=["POST"])
@@ -201,21 +205,6 @@ def submit_lead():
             return jsonify({"error": "Email has not been verified."}), 403
 
         timestamp = datetime.now().strftime("%Y-%m-%d %I:%M %p")
-
-        row = [
-            data.get("full_name"),
-            data.get("email"),
-            data.get("phone"),
-            data.get("property_address"),
-            data.get("estimated_property_value"),
-            data.get("current_mortgage_balance"),
-            data.get("estimated_equity"),
-            data.get("language"),
-            timestamp,
-            data.get("source", "direct")
-        ]
-
-        sheet.append_row(row)
 
         email_sent = True
         email_error = None
