@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template, redirect
 from flask_cors import CORS
 from datetime import datetime
 import base64
+import json
 import os
 import random
 import time
@@ -33,14 +34,29 @@ LEAD_NOTIFY_TO = os.environ.get("LEAD_NOTIFY_TO", "miguel@myfloridaequity.com")
 _google = {}
 
 
+def load_credentials():
+    """Token from GMAIL_TOKEN_JSON env var (preferred), else from the token file."""
+    raw = os.environ.get("GMAIL_TOKEN_JSON", "").strip()
+    if raw:
+        try:
+            info = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise RuntimeError(f"GMAIL_TOKEN_JSON is not valid JSON: {exc}")
+        return Credentials.from_authorized_user_info(info, GMAIL_SCOPES)
+    if os.path.exists(GMAIL_TOKEN_FILE):
+        return Credentials.from_authorized_user_file(GMAIL_TOKEN_FILE, GMAIL_SCOPES)
+    raise RuntimeError(
+        "No Gmail credentials: set the GMAIL_TOKEN_JSON environment variable "
+        f"or provide the token file at {GMAIL_TOKEN_FILE}"
+    )
+
+
 def gmail_service():
     """Build (and cache) the Gmail API client from the stored refresh token."""
     service = _google.get("service")
     if service is not None:
         return service
-    if not os.path.exists(GMAIL_TOKEN_FILE):
-        raise RuntimeError(f"Gmail token file not found: {GMAIL_TOKEN_FILE}")
-    creds = Credentials.from_authorized_user_file(GMAIL_TOKEN_FILE, GMAIL_SCOPES)
+    creds = load_credentials()
     if creds.expired and creds.refresh_token:
         creds.refresh(Request())
     service = build("gmail", "v1", credentials=creds, cache_discovery=False)
